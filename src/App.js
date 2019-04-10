@@ -15,7 +15,7 @@ export default class App extends Component {
 
   state = {
     movieResults: [], CurrentFilm: "", index: "",
-    CharacterList: [], movie_list: [],
+    movie_list: [], Mylist:[],
     loading: false, heightSort: true, nameSort: true, genderFilter: "default"
   }
 
@@ -31,26 +31,43 @@ export default class App extends Component {
 
   }
 
-  handleSelect = (value) => {
+
+  async handleSelect(value) {
     let index = value.value;
     let movie = this.state.movieResults[index];
-    this.setState({ CurrentFilm: movie.opening_crawl, CharacterList: [], loading: "Character List loading...", index });
-
-    (movie.characters).map((len) =>
-      axios.get(len).then((res) => {
-        let char = res.data;
-        let gender = ((char.gender === "male" || char.gender === "female") ? (char.gender === "male" ? "M" : "F") : "-");
-        this.setState(prevState => ({
-          CharacterList: [...prevState.CharacterList, { name: char.name, gender, height: char.height }]
-        }))
-
-      }).catch((err) => this.setState({ loading: "Something Went Wrong" }))
-    );
+    if(this.state.Mylist[index] === undefined){
+      this.setState({ CurrentFilm: movie.opening_crawl, loading: true, index });
+      
+      const pArray = (movie.characters).map( async len => {
+        const response = await fetch(`${len}`);
+        return response.json();
+      });
+      
+      const users = await Promise.all(pArray);
+      const mySets = new Set(); 
+      users.forEach((id) => {  mySets.add(id.gender)  });
+      this.setState(prevState => ({
+          ...prevState,
+          Mylist: {
+              ...prevState.Mylist,
+              [index]: users
+          },
+          Genders: {
+            ...prevState.Genders,
+            [index]: [...mySets]
+          },
+          loading:false,
+          genderFilter:"default"
+        }));
+      
+    }else{
+      this.setState({index, genderFilter:"default"});
+    }
 
   }
 
-  onSort = (event, sortKey) => {
-    const data = this.state.CharacterList;
+  onSort(event, sortKey){
+    const data = this.state.Mylist[this.state.index];
     const { heightSort, nameSort } = this.state;
 
     if (sortKey === "name") {
@@ -61,17 +78,20 @@ export default class App extends Component {
       data.sort((a, b) => (heightSort ? ((a.height) - (b.height)) : ((b.height) - (a.height))));
       this.setState(prevState => ({ heightSort: !prevState.heightSort }));
     }
+
     this.setState({ data })
 
   }
 
-  HandleGender = (e) => this.setState({ genderFilter: e.target.value });
+  HandleGender(e){
+    this.setState({ genderFilter: e.target.value });
+  }
 
   render() {
-    const { CurrentFilm, index, loading, CharacterList } = this.state;
-    const data = this.state.CharacterList;
+    const { CurrentFilm, index, loading, error} = this.state;
+    const data = this.state.Mylist[this.state.index] || [];
     const type = this.state.genderFilter;
-    const blu = (data).filter(key => (type === 'M' || type === 'F') ? (key.gender === type) : true)
+    const blu = (data).filter(key => ((type === "default") ? true : key.gender === type) )
       .map(item => parseInt(item.height));
 
     return (
@@ -81,7 +101,7 @@ export default class App extends Component {
             isSearchable={false}
             noOptionsMessage={() => "Loading..."}
             options={this.state.movie_list}
-            onChange={this.handleSelect} />
+            onChange={this.handleSelect.bind(this)} />
         </div>
 
         <div className="text-center">
@@ -96,41 +116,49 @@ export default class App extends Component {
               <div className="marquee mx-auto my-2" key={index}>
                 <p>{CurrentFilm}</p>
               </div>
+              <p className="error">{error}</p>
               <div>
-                {(loading !== "" && (CharacterList).length <= 0) ?
-                  <p className="text-center load">{loading}</p>
+                {(loading === true) ?
+                  <p className="text-center load">Character list loading...</p>
                   :
-                  <table className="table table-bordered w-50 mx-auto">
+                  <table className="table table-bordered w-50 mx-auto" key={this.state.index}>
                     <thead>
                       <tr>
                         <th scope="col"></th>
                         <th scope="col">
                           <select onChange={this.HandleGender.bind(this)}>
-                            <option value="default">all gender</option>
-                            <option value="M">Male</option>
-                            <option value="F">Female</option>
+                            <option value="default">default</option>
+                            {
+                              (this.state.Genders[this.state.index]).map((kili) => 
+                                <option key={kili}>{kili}</option>
+                              )
+                            }
                           </select>
                         </th>
                         <th scope="col"></th>
                       </tr>
                       <tr>
-                        <th scope="col" onClick={e => this.onSort(e, 'name')}>Name</th>
+                        <th scope="col" onClick={e => this.onSort(e, 'name')} className="clk-rl">Name</th>
                         <th scope="col">Gender</th>
-                        <th scope="col" onClick={e => this.onSort(e, 'height')}>Height(CM)</th>
+                        <th scope="col" onClick={e => this.onSort(e, 'height')} className="clk-rl">Height(CM)</th>
                       </tr>
                     </thead>
                     <tbody>
                       {
-                        Object.keys(data)
-                          .filter(key => (type === 'M' || type === 'F') ? (data[key].gender === type) : true)
-                          .map((key, index) =>
-                            <tr key={index}>
-                              <td>{data[key].name}</td>
-                              <td>{data[key].gender}</td>
-                              <td>{data[key].height}</td>
+                        (this.state.Mylist[this.state.index] !== undefined) ?
+                        (this.state.Mylist[this.state.index])
+                          .filter(key => ((type === "default") ? true : key.gender === type) )
+                          .map((key, ix) =>
+                            <tr key={ix}>
+                              <td>{key.name}</td>
+                              <td>{key.gender}</td>
+                              <td>{key.height}</td>
                             </tr>
                           )
+                          :
+                          <p>No records</p>
                       }
+                      
                       <tr>
                         <td colSpan="2">Total: {blu.length}</td>
                         <td>{blu.reduce(((a, b) => a + b),0)}cm {toFeet( blu.reduce(((a, b) => a + b),0) )}</td>

@@ -4,7 +4,7 @@ body{
 .table thead th {
     border-bottom: 2px solid #F8E71C;
 }
-.table thead th:hover{
+.table thead th.clk-rl:hover{
     cursor: pointer;
 }
 
