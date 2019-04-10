@@ -6,7 +6,7 @@ function toFeet(n) {
     var feet = Math.floor(realFeet);
     var inches = Math.round((realFeet - feet) * 12);
     return feet + "ft / " + inches + 'in';
-  }
+}
   
 
 export default class TBody extends Component {

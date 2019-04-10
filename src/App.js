@@ -15,7 +15,7 @@ class App extends Component {
     loading: false, heightSort: true, nameSort: true, genderFilter: "default"
   }
 
-  componentWillMount = () => {
+  componentWillMount(){
     axios.get(domain).then(res => {
       let movieResults = res.data.results;
       let movie_list = [];
