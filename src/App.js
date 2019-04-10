@@ -133,7 +133,7 @@ export default class App extends Component {
                       }
                       <tr>
                         <td colSpan="2">Total: {blu.length}</td>
-                        <td>{blu.reduce((a, b) => a + b)}cm {toFeet(blu.reduce((a, b) => a + b))}</td>
+                        <td>{blu.reduce(((a, b) => a + b),0)}cm {toFeet( blu.reduce(((a, b) => a + b),0) )}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -141,7 +141,7 @@ export default class App extends Component {
               </div>
             </div>
           }
-          
+
         </div>
       </div>
     );
