@@ -70,7 +70,7 @@ export default class App extends Component {
     const data = this.state.Mylist[this.state.index];
     const { heightSort, nameSort } = this.state;
 
-    if (sortKey === "name") {
+    if (sortKey === "name"  || sortKey === "gender") {
       data.sort((a, b) => (nameSort ? ((a[sortKey]).localeCompare(b[sortKey])) : ((b[sortKey]).localeCompare(a[sortKey]))));
       this.setState(prevState => ({ nameSort: !prevState.nameSort }));
 
@@ -139,7 +139,7 @@ export default class App extends Component {
                       </tr>
                       <tr>
                         <th scope="col" onClick={e => this.onSort(e, 'name')} className="clk-rl">Name</th>
-                        <th scope="col">Gender</th>
+                        <th scope="col" onClick={e => this.onSort(e, 'gender')} className="clk-rl">Gender</th>
                         <th scope="col" onClick={e => this.onSort(e, 'height')} className="clk-rl">Height(CM)</th>
                       </tr>
                     </thead>
